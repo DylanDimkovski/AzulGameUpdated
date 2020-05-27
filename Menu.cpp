@@ -1,9 +1,14 @@
 #include "Menu.h"
+#include "textColour.h"
 
 void Menu::printMenu()
 {
-    std::cout << "Menu" << std::endl
-              << "----" << std::endl
+    std::cout << TC_LIGHTBLUE << "   AA  " << " ZZZZZ" << " UU  UU" << " LL    " << std::endl
+              << TC_LIGHTBLUE << "  A  A " << "    ZZ" << " UU  UU" << " LL    " << std::endl
+              << TC_LIGHTBLUE << " AAAAAA" << "   ZZ " << " UU  UU" << " LL    " << std::endl
+              << TC_LIGHTBLUE << "AA   AA" << " ZZ   " << " UUUUUU" << " LLLLLL" << std::endl
+              << TC_LIGHTBLUE << "AA   AA" << " ZZZZZ" << " UUUUUU" << " LLLLLL" << std::endl
+              << TC_LIGHTBLUE << "---------------------------" << std::endl << TC_RESET
               << "1. New Game" << std::endl
               << "2. Load Game" << std::endl
               << "3. Credits" << std::endl

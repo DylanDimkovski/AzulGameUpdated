@@ -4,7 +4,8 @@
 #include "Saver.h"
 
 int main(int argc, char const *argv[])
-{
+{   
+    system("clear");
     //GameEngine engine = new GameEngine();
     Menu menu;
     bool exit = false;

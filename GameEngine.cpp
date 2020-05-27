@@ -442,6 +442,7 @@ Player *GameEngine::addPlayer(std::string name, int score, Mosaic *mosaic)
 
 void GameEngine::addPlayers()
 {
+    system("clear");
     //Checks for player names and adds them to player vector
     bool hasValidName = true;
     string name1;
@@ -468,6 +469,7 @@ void GameEngine::addPlayers()
     addPlayer(name1);
     addPlayer(name2);
 
+    system("clear");
     menu->printMessage("Let's Play!");
 }
 
