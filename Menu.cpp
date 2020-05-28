@@ -24,6 +24,7 @@ std::string Menu::getInput()
     std::cout << input << std::endl;
     return input;
 }
+
 void Menu::printCredits()
 {
     std::system("clear");
@@ -76,8 +77,9 @@ void Menu::printFactory(std::vector<TileType> *centerPile)
     std::cout << std::endl;
 }
 
-void Menu::printMosaic(Player *player)
+void Menu::printMosaic(std::vector<Player *> playerVector, int tempPlayerOneID){
 {
+    Player* player = playerVector[tempPlayerOneID];
     std::cout << "Mosaic for " << player->getName() << std::endl;
     for (int j = 0; j < NUMBER_OF_LINES; j++)
     {
@@ -116,8 +118,10 @@ void Menu::printMosaic(Player *player)
             }
         }
         std::cout << output << std::endl;
+        }
+        std::cout << "===========================================================================" 
+              << std::endl;
     }
-    std::cout << "broken: " << player->getMosaic()->getBrokenTiles()->toString() << std::endl;
 }
 
 void Menu::printMosaic(std::vector<Player *> playerVector, int tempPlayerOneID, int tempPlayerTwoID)

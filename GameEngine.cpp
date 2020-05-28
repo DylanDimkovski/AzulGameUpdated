@@ -109,19 +109,26 @@ bool GameEngine::playRound()
 
     bool exit = false;
 
-    menu->printMessage("===========================================================================");
-
     while (!exit && !roundOver())
-    {
+    {    
+        menu->printMessage("===========================================================================");
+
         for (int i = 0; i < 1; i++)
         {
             playerTurnID = players[i];
-            //menu->printMosaic(playerTurnID);
-            menu->printMosaic(players, 0, 1);
+            if (numberOfPlayers > 3)
+            {
+                menu->printMosaic(players, 0, 1);
+                menu->printMosaic(players, 2, 3);
+            }
+            else if(numberOfPlayers == 3){
+                menu->printMosaic(players, 0,1);
+                menu->printMosaic(players, 2);
+            }
+            
         }
         
         //Print player turn GUI
-        std::cout << playerTurnCount << "test \n";
         playerTurnID = players[playerTurnCount];
         menu->handStart(playerTurnID->getName());
         menu->printFactory(&centerPile);
@@ -129,7 +136,14 @@ bool GameEngine::playRound()
         {
             menu->printFactory(i + 1, factories[i]->toString());
         }
-        //menu->printMosaic(playerTurnID);
+        
+        std::cout << "==========" << std::endl;
+        for (int i = 0; i < numberOfPlayers; i++)
+        {
+            Player* player = players[i];
+            menu->printScore(player->getName(), player->getScore());
+        }
+        std::cout << "==========" << std::endl;
 
         //Bool to check whether input command has been executed
         bool inputDone = false;
@@ -238,8 +252,7 @@ bool GameEngine::playRound()
                                     //Change player turn
                                     changePlayerTurn();
                                     system("clear");
-                                    menu->printMessage("Turn successful.");
-                                    menu->printMessage("===========================================================================");
+                                    std::cout << "Turn Successful!";
                                 }
                             }
                             else
@@ -284,8 +297,6 @@ bool GameEngine::playRound()
     if (!exit)
     {
         //Distribute tiles to walls
-        menu->printMessage("=== END OF ROUND ===");
-
         for (auto player : players)
         {
             if (player->hasFirstPlayer())
@@ -297,7 +308,6 @@ bool GameEngine::playRound()
             {
                 lid->addBack(tile);
             }
-            menu->printScore(player->getName(), player->getScore());
         }
     }
     return exit;
@@ -338,7 +348,7 @@ void GameEngine::setPlayerTurn(int playerIndex)
 
 void GameEngine::changePlayerTurn()
 {
-    if (playerTurnCount == numberOfPlayers)
+    if (playerTurnCount + 1 == numberOfPlayers)
     {
         playerTurnCount = 0;
     }
@@ -454,34 +464,42 @@ Player *GameEngine::addPlayer(std::string name, int score, Mosaic *mosaic)
 void GameEngine::addPlayers()
 {
     system("clear");
+
+    //Asks for number of players
+    menu->printMessage("Please Enter Number of Players: (2-4)");
+    bool isValidNum = false;
+    std::string strToInt;
+    do
+    {
+        strToInt = menu->getInput();
+        if (strToInt == "2" || strToInt == "3" || strToInt == "4")
+                {
+                    isValidNum = true;
+                    numberOfPlayers = std::stoi(strToInt);
+                }
+        else{
+            menu->printMessage("Error - Invalid number of players");}
+    } while (!isValidNum);
+
     //Checks for player names and adds them to player vector
-    bool hasValidName = true;
-    string name1;
-    do
-    {
-        menu->printMessage("Enter the name for player 1:");
-        name1 = menu->getInput();
-        hasValidName = isNotWhiteSpace(name1);
-        if (!hasValidName)
-            menu->printMessage("Error - Invalid Name");
-    } while (!hasValidName && !std::cin.eof());
+    string name;
 
-    hasValidName = true;
-    string name2;
-    do
+    for (int i = 0; i < numberOfPlayers; i++)
     {
-        menu->printMessage("Enter the name for player 2:");
-        name2 = menu->getInput();
-        hasValidName = isNotWhiteSpace(name2);
-        if (!hasValidName)
-            menu->printMessage("Error - Invalid Name");
-    } while (!hasValidName && !std::cin.eof());
-
-    addPlayer(name1);
-    addPlayer(name2);
+        bool hasValidName = true;
+        do
+        {
+            std::cout << "Please Enter the Name of Player " << i + 1 << ": " << std::endl; 
+            name = menu->getInput();
+            hasValidName = isNotWhiteSpace(name);
+            if (!hasValidName)
+                menu->printMessage("Error - Invalid Name");
+        } while (!hasValidName && !std::cin.eof());
+        addPlayer(name);
+    }
 
     system("clear");
-    menu->printMessage("Let's Play!");
+    std::cout << "Let's Play!";
 }
 
 std::vector<TileType> GameEngine::getCenterPile()
