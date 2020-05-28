@@ -9,6 +9,7 @@ void Menu::printMenu()
               << TC_LIGHTBLUE << "AA   AA" << " ZZ   " << " UUUUUU" << " LLLLLL" << std::endl
               << TC_LIGHTBLUE << "AA   AA" << " ZZZZZ" << " UUUUUU" << " LLLLLL" << std::endl
               << TC_LIGHTBLUE << "---------------------------" << std::endl << TC_RESET
+              << "Please Enter A Number: " << std::endl
               << "1. New Game" << std::endl
               << "2. Load Game" << std::endl
               << "3. Credits" << std::endl
@@ -25,6 +26,7 @@ std::string Menu::getInput()
 }
 void Menu::printCredits()
 {
+    std::system("clear");
     std::cout << std::endl
               << "----------------------------------" << std::endl
               << "Name: Luca Cave" << std::endl
@@ -39,7 +41,10 @@ void Menu::printCredits()
               << "Student ID: s3717379" << std::endl
               << "Email: s3717379@student.rmit.edu.au" << std::endl
               << "----------------------------------" << std::endl
+              << "Please Press Enter to Continue..." 
               << std::endl;
+    std::cin.ignore();
+    std::system("clear");
 }
 
 void Menu::printMessage(std::string message)
@@ -113,6 +118,93 @@ void Menu::printMosaic(Player *player)
         std::cout << output << std::endl;
     }
     std::cout << "broken: " << player->getMosaic()->getBrokenTiles()->toString() << std::endl;
+}
+
+void Menu::printMosaic(std::vector<Player *> playerVector, int tempPlayerOneID, int tempPlayerTwoID)
+{
+    Player* playerONE = playerVector[tempPlayerOneID];
+    Player* playerTWO = playerVector[tempPlayerTwoID];
+    std::cout << "Mosaic for " << playerONE->getName()
+              << "                                   "
+              << "Mosaic for " << playerTWO->getName()
+              << std::endl;
+    for (int j = 0; j < NUMBER_OF_LINES; j++)
+    {
+        std::cout << j + 1 << ": ";
+        std::string outputOne;
+        std::string outputTwo;
+        int lineSize = playerONE->getMosaic()->getLine(j)->getMaxSize();
+        int numTiles = playerONE->getMosaic()->getLine(j)->getNumTiles();
+
+        for (int i = 0; i < 5 - lineSize; i++)
+        {
+            outputOne += "  ";
+        }
+
+        for (int i = 0; i < lineSize - numTiles; i++)
+        {
+            outputOne += ". ";
+        }
+        for (int i = 0; i < numTiles; i++)
+        {
+            outputOne += " ";
+            outputOne += playerONE->getMosaic()->getLine(j)->getTileType();
+        }
+
+        outputOne += " || ";
+
+        for (int i = 0; i < NUMBER_OF_LINES; i++)
+        {
+            if (playerONE->getMosaic()->getWallLine(j)[i] == true)
+            {
+                outputOne += " ";
+                outputOne += master_wall[j][i];
+            }
+            else
+            {
+                outputOne += " .";
+            }
+        }
+        std::cout << outputOne
+                  << "                    ";
+        std::cout << j + 1 << ": ";
+        lineSize = playerTWO->getMosaic()->getLine(j)->getMaxSize();
+        numTiles = playerTWO->getMosaic()->getLine(j)->getNumTiles();
+
+        for (int i = 0; i < 5 - lineSize; i++)
+        {
+            outputTwo += "  ";
+        }
+
+        for (int i = 0; i < lineSize - numTiles; i++)
+        {
+            outputTwo += ". ";
+        }
+        for (int i = 0; i < numTiles; i++)
+        {
+            outputTwo += " ";
+            outputTwo += playerTWO->getMosaic()->getLine(j)->getTileType();
+        }
+
+        outputTwo += " || ";
+
+        for (int i = 0; i < NUMBER_OF_LINES; i++)
+        {
+            if (playerTWO->getMosaic()->getWallLine(j)[i] == true)
+            {
+                outputTwo += " ";
+                outputTwo += master_wall[j][i];
+            }
+            else
+            {
+                outputTwo += " .";
+            }
+        }
+        std::cout << outputTwo
+                  << std::endl;
+    }
+    std::cout << "===========================================================================" 
+              << std::endl;
 }
 
 void Menu::printScore(string name, int score)

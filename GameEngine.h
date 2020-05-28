@@ -57,6 +57,10 @@ public:
     TileList *getLid();
     Player *getPlayerTurnID();
 
+public:
+    int playerTurnCount = 0;
+    int numberOfPlayers;
+
 private:
     void changePlayerTurn();
     bool hasPlayerWon();

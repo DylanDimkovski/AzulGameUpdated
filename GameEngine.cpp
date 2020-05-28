@@ -109,18 +109,27 @@ bool GameEngine::playRound()
 
     bool exit = false;
 
-    menu->printMessage("=== Start Round ===");
+    menu->printMessage("===========================================================================");
 
     while (!exit && !roundOver())
     {
+        for (int i = 0; i < 1; i++)
+        {
+            playerTurnID = players[i];
+            //menu->printMosaic(playerTurnID);
+            menu->printMosaic(players, 0, 1);
+        }
+        
         //Print player turn GUI
+        std::cout << playerTurnCount << "test \n";
+        playerTurnID = players[playerTurnCount];
         menu->handStart(playerTurnID->getName());
         menu->printFactory(&centerPile);
         for (int i = 0; i < NUM_FACTORIES; i++)
         {
             menu->printFactory(i + 1, factories[i]->toString());
         }
-        menu->printMosaic(playerTurnID);
+        //menu->printMosaic(playerTurnID);
 
         //Bool to check whether input command has been executed
         bool inputDone = false;
@@ -228,7 +237,9 @@ bool GameEngine::playRound()
                                 {
                                     //Change player turn
                                     changePlayerTurn();
+                                    system("clear");
                                     menu->printMessage("Turn successful.");
+                                    menu->printMessage("===========================================================================");
                                 }
                             }
                             else
@@ -327,13 +338,13 @@ void GameEngine::setPlayerTurn(int playerIndex)
 
 void GameEngine::changePlayerTurn()
 {
-    if (players[0] == playerTurnID)
+    if (playerTurnCount == numberOfPlayers)
     {
-        playerTurnID = players[1];
+        playerTurnCount = 0;
     }
     else
     {
-        playerTurnID = players[0];
+        playerTurnCount++;
     }
 }
 
@@ -453,7 +464,7 @@ void GameEngine::addPlayers()
         hasValidName = isNotWhiteSpace(name1);
         if (!hasValidName)
             menu->printMessage("Error - Invalid Name");
-    } while (!hasValidName);
+    } while (!hasValidName && !std::cin.eof());
 
     hasValidName = true;
     string name2;
@@ -464,7 +475,7 @@ void GameEngine::addPlayers()
         hasValidName = isNotWhiteSpace(name2);
         if (!hasValidName)
             menu->printMessage("Error - Invalid Name");
-    } while (!hasValidName);
+    } while (!hasValidName && !std::cin.eof());
 
     addPlayer(name1);
     addPlayer(name2);

@@ -34,6 +34,9 @@ int main(int argc, char const *argv[])
                     if (engine != nullptr)
                     {
                         menu.printMessage("Azul game successfully loaded");
+                        menu.printMessage("Press Enter to Play...");
+                        std::cin.ignore();
+                        std::system("clear");
                         exit = engine->playGame();
                     }
                 }
@@ -41,9 +44,12 @@ int main(int argc, char const *argv[])
                 {
                     std::string message(errorMessage);
                     menu.printMessage("Error reading file - "+message+"\n");
+                    std::cout << "Press Enter to Continue... \n"; 
+                    std::cin.ignore();
                 }
             }
             else exit = true;
+            std::system("clear");
         }
         else if (input == "3")
         {
@@ -61,5 +67,6 @@ int main(int argc, char const *argv[])
     menu.printMessage("Goodbye");
     if (engine != nullptr) delete engine;
 
+    system("clear");
     return 0;
 }

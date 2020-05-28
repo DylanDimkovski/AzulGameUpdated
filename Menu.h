@@ -26,6 +26,8 @@ public:
     void printFactory(std::vector<TileType> *centerPile);
     //Print player's mosaic
     void printMosaic(Player *player);
+    //Print Multiple Mosaics
+    void printMosaic(std::vector<Player *> players, int playerOneID, int playerTwoID);
     //Print player's score
     void printScore(string name, int score);
     //Print game results with winner
