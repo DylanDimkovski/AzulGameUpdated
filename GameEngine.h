@@ -39,11 +39,13 @@ public:
     //Import already filled lid
     void fillLid(TileList *lid);
     //Fill center pile with tiles from vector
-    void fillCenterPile(std::vector<TileType> centerPile);
+    void fillCenterPile(std::vector<TileType> centerPileOne);
     //Draw tiles from bag and fill factories
     void fillFactories(Factory *factories[]);
     //Set a pointer to the player whose turn it is
     void setPlayerTurn(int playerIndex);
+    //Displays a help menu
+    void helpMenu(std::string state);
 
     // Getters
     Factory *getFactory(int);
@@ -60,11 +62,14 @@ public:
 public:
     int playerTurnCount = 0;
     int numberOfPlayers;
+    int pileNum;
+    int factoryModifier = 0;
+    int numberOfCenterPiles = 0;
 
 private:
     void changePlayerTurn();
     bool hasPlayerWon();
-    int drawFromCenter(TileType colour);
+    int drawFromCenter(TileType colour, std::vector<TileType> centerPile);
     bool containsFirstPlayer();
     bool roundOver();
     bool factoriesAreEmpty();
@@ -73,8 +78,9 @@ private:
     bool validFactoryNum(int factoryNum);
 
     std::vector<Player *> players;
-    Factory *factories[NUM_FACTORIES];
-    std::vector<TileType> centerPile;
+    Factory **factories;
+    std::vector<TileType> centerPileOne;
+    std::vector<TileType> centerPileTwo;
     Player *playerTurnID;
     TileList *bag;
     TileList *lid;

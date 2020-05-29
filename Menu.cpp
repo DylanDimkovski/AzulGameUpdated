@@ -58,19 +58,46 @@ void Menu::printMessage(std::string message)
 void Menu::handStart(string playername)
 {
     std::cout << "TURN FOR PLAYER: " << playername << std::endl;
+    std::cout << "===========================================================================" << std::endl;
     std::cout << "Factories: \n";
 }
 
-void Menu::printFactory(int id, string contents)
+void Menu::printFactory(int id, string contents, int playerModifier)
 {
-    std::cout << id << ": " << contents << std::endl;
-    std::cout << (id == 5 ? "\n" : "");
+    std::cout << id << ": " << contents << std::endl;    
+    if (playerModifier == 3)
+    {
+        std::cout << (id == 5 + 2 ? "\n" : "");
+    }
+    else if(playerModifier == 4){
+        std::cout << (id == 5 + 4 ? "\n" : "");
+    }
+    else
+    {
+        std::cout << (id == 5 ? "\n" : "");
+    }
 }
 
 void Menu::printFactory(std::vector<TileType> *centerPile)
 {
-    std::cout << "0: ";
+    std::cout << "10: ";
     for (TileType tile : *centerPile)
+    {
+        std::cout << (char)tile << " ";
+    }
+    std::cout << std::endl;
+}
+
+void Menu::printFactory(std::vector<TileType> *centerPileOne, std::vector<TileType> *centerPileTwo)
+{
+    std::cout << "10: ";
+    for (TileType tile : *centerPileOne)
+    {
+        std::cout << (char)tile << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "11: ";
+    for (TileType tile : *centerPileTwo)
     {
         std::cout << (char)tile << " ";
     }

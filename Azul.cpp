@@ -12,6 +12,7 @@ int main(int argc, char const *argv[])
     std::string input;
     GameEngine *engine = nullptr;
     Saver saver;
+    std::string gameState = "menu";
     do
     {
         menu.printMenu();
@@ -58,6 +59,9 @@ int main(int argc, char const *argv[])
         else if (std::cin.eof() || input == "4")
         {
             exit = true;
+        }
+        else if(input == "help"){
+            engine->helpMenu(gameState);
         }
         else
         {

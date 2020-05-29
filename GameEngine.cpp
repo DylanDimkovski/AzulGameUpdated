@@ -7,13 +7,16 @@
 
 GameEngine::GameEngine(Menu *menu) : players(),
                                      factories(),
-                                     centerPile(),
+                                     centerPileOne(),
+                                     centerPileTwo(),
                                      bag(new TileList()),
                                      lid(new TileList()),
                                      menu(menu)
+
 {
     //Create factories
-    for (int i = 0; i < NUM_FACTORIES; ++i)
+    factories = new Factory *[NUM_FACTORIES];
+    for (int i = 0; i < NUM_FACTORIES + factoryModifier; ++i)
     {
         factories[i] = new Factory();
     }
@@ -21,7 +24,7 @@ GameEngine::GameEngine(Menu *menu) : players(),
 
 GameEngine::~GameEngine()
 {
-    for (int i = 0; i < NUM_FACTORIES; ++i)
+    for (int i = 0; i < NUM_FACTORIES + factoryModifier; ++i)
     {
         if (factories[i] != nullptr)
             delete factories[i];
@@ -38,6 +41,34 @@ GameEngine::~GameEngine()
 bool GameEngine::playGame(char const *argv)
 {
     addPlayers();
+    for (int i = 0; i < NUM_FACTORIES + factoryModifier; i++)
+    {
+        if (factories[i] != nullptr)
+        {
+            delete factories[i];
+        }
+    }
+
+    if (numberOfPlayers == 3)
+    {
+        factoryModifier = 2;
+    }
+    else if (numberOfPlayers == 4)
+    {
+        factoryModifier = 4;
+    }
+
+    if (factories != nullptr)
+    {
+        delete[] factories;
+    }
+
+    factories = new Factory *[NUM_FACTORIES + factoryModifier];
+
+    for (int i = 0; i < NUM_FACTORIES + factoryModifier; i++)
+    {
+        factories[i] = new Factory();
+    }
     fillBag(argv[0]);
     playerTurnID = players[0];
     return playGame();
@@ -84,8 +115,9 @@ bool GameEngine::playRound()
     if (roundOver())
     {
         //Return FP tile to center
-        centerPile.push_back(FIRSTPLAYER);
-        for (int i = 0; i < NUM_FACTORIES; i++)
+        centerPileOne.push_back(FIRSTPLAYER);
+        centerPileTwo.push_back(FIRSTPLAYER);
+        for (int i = 0; i < NUM_FACTORIES + factoryModifier; i++)
         {
             TileType temp[4] = {NOTILE, NOTILE, NOTILE, NOTILE};
 
@@ -103,6 +135,7 @@ bool GameEngine::playRound()
                 temp[j] = bag->removeFront();
             }
             //Refill factories
+
             factories[i]->fill(temp);
         }
     }
@@ -110,37 +143,52 @@ bool GameEngine::playRound()
     bool exit = false;
 
     while (!exit && !roundOver())
-    {    
+    {
         menu->printMessage("===========================================================================");
 
         for (int i = 0; i < 1; i++)
         {
             playerTurnID = players[i];
-            if (numberOfPlayers > 3)
+            if (numberOfPlayers == 4)
             {
                 menu->printMosaic(players, 0, 1);
                 menu->printMosaic(players, 2, 3);
             }
-            else if(numberOfPlayers == 3){
-                menu->printMosaic(players, 0,1);
+            else if (numberOfPlayers == 3)
+            {
+                menu->printMosaic(players, 0, 1);
                 menu->printMosaic(players, 2);
             }
-            
+            else
+            {
+                menu->printMosaic(players, 0, 1);
+            }
         }
-        
+
         //Print player turn GUI
         playerTurnID = players[playerTurnCount];
         menu->handStart(playerTurnID->getName());
-        menu->printFactory(&centerPile);
-        for (int i = 0; i < NUM_FACTORIES; i++)
+        if (numberOfCenterPiles == 1)
         {
-            menu->printFactory(i + 1, factories[i]->toString());
+            menu->printFactory(&centerPileOne);
         }
-        
+        else
+        {
+            menu->printFactory(&centerPileOne, &centerPileTwo);
+        }
+
+        for (int i = 0; i < NUM_FACTORIES + factoryModifier; i++)
+        {
+            menu->printFactory(i + 1, factories[i]->toString(), numberOfPlayers);
+        }
+        std::cout << "Broken: "
+                  << playerTurnID->getMosaic()->getBrokenTiles()->toString()
+                  << std::endl;
+
         std::cout << "==========" << std::endl;
         for (int i = 0; i < numberOfPlayers; i++)
         {
-            Player* player = players[i];
+            Player *player = players[i];
             menu->printScore(player->getName(), player->getScore());
         }
         std::cout << "==========" << std::endl;
@@ -177,14 +225,14 @@ bool GameEngine::playRound()
                             if (validLineNum(lineNum))
                             {
                                 //If drawing from center pile
-                                if (factoryNum == 0)
+                                if (factoryNum == 10)
                                 {
-                                    if (!centerPile.empty() && centerPileContains(tileType))
+                                    if (!centerPileOne.empty() && centerPileContains(tileType))
                                     {
                                         //If moving tiles straight to broken line
                                         if (lineNum == 5)
                                         {
-                                            playerTurnID->getMosaic()->addToBrokenTiles(drawFromCenter(tileType), tileType);
+                                            playerTurnID->getMosaic()->addToBrokenTiles(drawFromCenter(tileType, centerPileOne), tileType);
                                             inputDone = true;
                                         }
                                         //If moving tiles to pattern line
@@ -195,7 +243,34 @@ bool GameEngine::playRound()
                                             {
                                                 playerTurnID->getMosaic()->getBrokenTiles()->addFront(FIRSTPLAYER);
                                             }
-                                            playerTurnID->getMosaic()->insertTilesIntoLine(lineNum, drawFromCenter(tileType), tileType);
+                                            playerTurnID->getMosaic()->insertTilesIntoLine(lineNum, drawFromCenter(tileType, centerPileOne), tileType);
+                                            inputDone = true;
+                                        }
+                                        else
+                                            errorMessage = "Specified line cannot add tile";
+                                    }
+                                    else
+                                        errorMessage = "Center pile does not contain specified tile";
+                                }
+                                if (factoryNum == 11)
+                                {
+                                    if (!centerPileTwo.empty() && centerPileContains(tileType))
+                                    {
+                                        //If moving tiles straight to broken line
+                                        if (lineNum == 5)
+                                        {
+                                            playerTurnID->getMosaic()->addToBrokenTiles(drawFromCenter(tileType, centerPileTwo), tileType);
+                                            inputDone = true;
+                                        }
+                                        //If moving tiles to pattern line
+                                        else if (!playerTurnID->getMosaic()->isFilled(lineNum, tileType) &&
+                                                 playerTurnID->getMosaic()->getLine(lineNum)->canAddTiles(tileType))
+                                        {
+                                            if (containsFirstPlayer())
+                                            {
+                                                playerTurnID->getMosaic()->getBrokenTiles()->addFront(FIRSTPLAYER);
+                                            }
+                                            playerTurnID->getMosaic()->insertTilesIntoLine(lineNum, drawFromCenter(tileType, centerPileTwo), tileType);
                                             inputDone = true;
                                         }
                                         else
@@ -207,6 +282,32 @@ bool GameEngine::playRound()
                                 //If drawing from factory
                                 else
                                 {
+                                    //Check which center factory to discard too
+                                    menu->printMessage("Please Enter Which Center Factory to add excess tiles: ");
+
+                                    std::string numberConversion;
+                                    bool inputCheck = false;
+                                    while (!inputCheck)
+                                    {
+                                        numberConversion = menu->getInput();
+
+                                        if (numberConversion == "11" && numberOfCenterPiles == 1)
+                                        {
+                                            std::cout << "Invalid Center Pile, Try Again!"
+                                                      << std::endl;
+                                        }
+                                        else if (numberConversion == "10" || numberConversion == "11")
+                                        {
+                                            inputCheck = true;
+                                            pileNum = std::stoi(numberConversion);
+                                        }
+                                        else
+                                        {
+                                            std::cout << "Invalid Center Pile, Try Again!"
+                                                      << std::endl;
+                                        }
+                                    }
+
                                     //-1 from factory num input as index starts at 0
                                     --factoryNum;
                                     if (!factories[factoryNum]->isEmpty())
@@ -219,7 +320,14 @@ bool GameEngine::playRound()
                                                 playerTurnID->getMosaic()->addToBrokenTiles(factories[factoryNum]->draw(tileType), tileType);
                                                 for (TileType tile : factories[factoryNum]->empty())
                                                 {
-                                                    centerPile.push_back(tile);
+                                                    if (pileNum == 10)
+                                                    {
+                                                        centerPileOne.push_back(tile);
+                                                    }
+                                                    else if (pileNum == 11)
+                                                    {
+                                                        centerPileTwo.push_back(tile);
+                                                    }
                                                 }
                                                 inputDone = true;
                                             }
@@ -231,7 +339,14 @@ bool GameEngine::playRound()
 
                                                 for (TileType tile : factories[factoryNum]->empty())
                                                 {
-                                                    centerPile.push_back(tile);
+                                                    if (pileNum == 10)
+                                                    {
+                                                        centerPileOne.push_back(tile);
+                                                    }
+                                                    else if (pileNum == 11)
+                                                    {
+                                                        centerPileTwo.push_back(tile);
+                                                    }
                                                 }
 
                                                 inputDone = true;
@@ -320,13 +435,13 @@ bool GameEngine::validLineNum(int lineNum)
 
 bool GameEngine::validFactoryNum(int factoryNum)
 {
-    return factoryNum >= 0 && factoryNum <= NUM_FACTORIES;
+    return factoryNum >= 0 && factoryNum <= NUM_FACTORIES + factoryModifier;
 }
 
 bool GameEngine::roundOver()
 {
-    // centerPile.empty() && factoriesAreEmpty(); equivalent but less efficient
-    return !(!centerPile.empty() || !factoriesAreEmpty());
+    // centerPileOne.empty() && factoriesAreEmpty(); equivalent but less efficient
+    return !(!centerPileOne.empty() || !factoriesAreEmpty());
 }
 
 // returns true if factories are empty
@@ -334,7 +449,7 @@ bool GameEngine::factoriesAreEmpty()
 {
     bool factoriesEmpty = true;
     int factoryIndex = 0;
-    while (factoriesEmpty && factoryIndex < NUM_FACTORIES)
+    while (factoriesEmpty && factoryIndex < NUM_FACTORIES + factoryModifier)
     {
         factoriesEmpty &= factories[factoryIndex++]->isEmpty();
     }
@@ -385,7 +500,7 @@ void GameEngine::fillBag(int seed)
     }
 }
 
-int GameEngine::drawFromCenter(TileType colour)
+int GameEngine::drawFromCenter(TileType colour, std::vector<TileType> centerPile)
 {
     int count = 0;
     std::vector<int> remove;
@@ -404,7 +519,7 @@ int GameEngine::drawFromCenter(TileType colour)
     for (int i = 0; i < (int)remove.size(); i++)
     {
         // erase element at index
-        centerPile.erase(centerPile.begin() + (remove[i] - decrement));
+        centerPile.erase(centerPileOne.begin() + (remove[i] - decrement));
         // Reduce all future indexes by 1
         decrement++;
     }
@@ -414,9 +529,9 @@ int GameEngine::drawFromCenter(TileType colour)
 bool GameEngine::containsFirstPlayer()
 {
     bool contains = false;
-    if (centerPile[0] == FIRSTPLAYER)
+    if (centerPileOne[0] == FIRSTPLAYER)
     {
-        centerPile.erase(centerPile.begin());
+        centerPileOne.erase(centerPileOne.begin());
         contains = true;
     }
     return contains;
@@ -424,24 +539,26 @@ bool GameEngine::containsFirstPlayer()
 
 void GameEngine::fillBag(TileList *bag)
 {
-    if (this->bag != nullptr) delete this->bag;
+    if (this->bag != nullptr)
+        delete this->bag;
     this->bag = bag;
 }
 
 void GameEngine::fillLid(TileList *lid)
 {
-    if (this->lid != nullptr) delete this->lid;
+    if (this->lid != nullptr)
+        delete this->lid;
     this->lid = lid;
 }
 
-void GameEngine::fillCenterPile(std::vector<TileType> centerPile)
+void GameEngine::fillCenterPile(std::vector<TileType> centerPileOne)
 {
-    this->centerPile = centerPile;
+    this->centerPileOne = centerPileOne;
 }
 
 void GameEngine::fillFactories(Factory *factories[])
 {
-    for (int i = 0; i < NUM_FACTORIES; ++i)
+    for (int i = 0; i < NUM_FACTORIES + factoryModifier; ++i)
     {
         if (this->factories[i] != nullptr)
             delete this->factories[i];
@@ -473,12 +590,14 @@ void GameEngine::addPlayers()
     {
         strToInt = menu->getInput();
         if (strToInt == "2" || strToInt == "3" || strToInt == "4")
-                {
-                    isValidNum = true;
-                    numberOfPlayers = std::stoi(strToInt);
-                }
-        else{
-            menu->printMessage("Error - Invalid number of players");}
+        {
+            isValidNum = true;
+            numberOfPlayers = std::stoi(strToInt);
+        }
+        else
+        {
+            menu->printMessage("Error - Invalid number of players");
+        }
     } while (!isValidNum);
 
     //Checks for player names and adds them to player vector
@@ -489,7 +608,7 @@ void GameEngine::addPlayers()
         bool hasValidName = true;
         do
         {
-            std::cout << "Please Enter the Name of Player " << i + 1 << ": " << std::endl; 
+            std::cout << "Please Enter the Name of Player " << i + 1 << ": " << std::endl;
             name = menu->getInput();
             hasValidName = isNotWhiteSpace(name);
             if (!hasValidName)
@@ -498,13 +617,29 @@ void GameEngine::addPlayers()
         addPlayer(name);
     }
 
+    menu->printMessage("Please Choose the number of Center Piles you would Like: (1-2)");
+    bool isValid = false;
+    while (!isValid)
+    {
+        strToInt = menu->getInput();
+        if (strToInt == "1" || strToInt == "2")
+        {
+            isValid = true;
+            numberOfCenterPiles = std::stoi(strToInt);
+        }
+        else
+        {
+            menu->printMessage("Invalid number of CenterPiles, Try Again!");
+        }
+    }
+
     system("clear");
     std::cout << "Let's Play!";
 }
 
 std::vector<TileType> GameEngine::getCenterPile()
 {
-    return centerPile;
+    return centerPileOne;
 }
 
 TileList *GameEngine::getBag()
@@ -538,12 +673,27 @@ bool GameEngine::hasPlayerWon()
 
 bool GameEngine::centerPileContains(TileType tileType)
 {
-    bool centerPileContainsTile = false;
+    bool centerPileOneContainsTile = false;
     unsigned int index = 0;
-    while (!centerPileContainsTile && index < centerPile.size())
+    while (!centerPileOneContainsTile && index < centerPileOne.size())
     {
-        centerPileContainsTile = centerPile[index] == tileType;
+        centerPileOneContainsTile = centerPileOne[index] == tileType;
         index++;
     }
-    return centerPileContainsTile;
+    return centerPileOneContainsTile;
+}
+
+void GameEngine::helpMenu(std::string state){
+    system("Clear");
+    std::cout << ("========================== Help Menu ==========================") << std::endl;
+    std::cout << ("Command:                    Example:                Description") << std::endl;
+
+    if (state == "menu")
+    {
+        std::cout << "<option Number>:            2                       Selects an option from the menu with the corresponding number." << std::endl;     
+        std::cout << "4 / ^D:                     Exit Game               Ends the Game." << std::endl;
+        std::cout << "help:                       help                    Prints a help menu." << std::endl;
+    }
+    std::cout << ("Press Enter To Continue...") << std::endl;
+    std::cin.ignore();
 }

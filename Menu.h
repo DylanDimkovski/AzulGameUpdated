@@ -21,9 +21,11 @@ public:
     //Print GUI for player turn
     void handStart(std::string playerName);
     //Print a factory
-    void printFactory(int id, string contents);
-    //Print centerPile
+    void printFactory(int id, string contents, int playerModifier);
+    //Print One centerPile
     void printFactory(std::vector<TileType> *centerPile);
+    //Print both centerPiles
+    void printFactory(std::vector<TileType> *centerPileOne, std::vector<TileType> *centerPileTwo);
     //Print player's mosaic
     void printMosaic(std::vector<Player *> playerVector, int tempPlayerOneID);
     //Print Multiple Mosaics
