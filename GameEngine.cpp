@@ -1,6 +1,7 @@
 #include "GameEngine.h"
 
 #include "Saver.h"
+#include "textColour.h"
 #include <iostream>
 #include <algorithm>
 #include <random>
@@ -581,18 +582,21 @@ Player *GameEngine::addPlayer(std::string name, int score, Mosaic *mosaic)
 void GameEngine::addPlayers()
 {
     system("clear");
-
     //Asks for number of players
-    menu->printMessage("Please Enter Number of Players: (2-4)");
     bool isValidNum = false;
     std::string strToInt;
     do
     {
+        menu->printMessage("Please Enter Number of Players: (2-4)");
         strToInt = menu->getInput();
         if (strToInt == "2" || strToInt == "3" || strToInt == "4")
         {
             isValidNum = true;
             numberOfPlayers = std::stoi(strToInt);
+        }
+        else if (strToInt == "help")
+        {
+            helpMenu("new");
         }
         else
         {
@@ -613,19 +617,26 @@ void GameEngine::addPlayers()
             hasValidName = isNotWhiteSpace(name);
             if (!hasValidName)
                 menu->printMessage("Error - Invalid Name");
+            if (name == "help")
+            {
+                helpMenu("new");
+                hasValidName = false;
+            }
         } while (!hasValidName && !std::cin.eof());
         addPlayer(name);
     }
-
-    menu->printMessage("Please Choose the number of Center Piles you would Like: (1-2)");
     bool isValid = false;
     while (!isValid)
     {
+        menu->printMessage("Please Choose the number of Center Piles you would Like: (1-2)");
         strToInt = menu->getInput();
         if (strToInt == "1" || strToInt == "2")
         {
             isValid = true;
             numberOfCenterPiles = std::stoi(strToInt);
+        }
+        else if(strToInt == "help"){
+            helpMenu("new");
         }
         else
         {
@@ -683,17 +694,36 @@ bool GameEngine::centerPileContains(TileType tileType)
     return centerPileOneContainsTile;
 }
 
-void GameEngine::helpMenu(std::string state){
-    system("Clear");
-    std::cout << ("========================== Help Menu ==========================") << std::endl;
+void GameEngine::helpMenu(std::string state)
+{
+    system("clear");
+    std::cout << ("=================================================== Help Menu ===================================================") << std::endl;
     std::cout << ("Command:                    Example:                Description") << std::endl;
 
     if (state == "menu")
     {
-        std::cout << "<option Number>:            2                       Selects an option from the menu with the corresponding number." << std::endl;     
+        std::cout << "<option Number>:            2                       Selects an option from the menu with the corresponding number." << std::endl;
         std::cout << "4 / ^D:                     Exit Game               Ends the Game." << std::endl;
         std::cout << "help:                       help                    Prints a help menu." << std::endl;
     }
+    else if (state == "load")
+    {
+        std::cout << "saves/<filename>:           saves/testfile         Loads from file called 'testfile'." << std::endl;
+        std::cout << "^D :                        Exit Game              Ends the Game." << std::endl;
+    }
+    else if (state == "new")
+    {
+        std::cout << "^D :                        Exit Game              Ends the Game." << std::endl;
+        std::cout << std::endl;
+        std::cout << "Please Follow The Prompt and enter in User Details so the Game can Begin!!" << std::endl;
+        std::cout << "Did you know that a hashtag symbol is called an octothorpe?" << std::endl;
+    }
+    else if(state == "game"){
+        
+    }
+
+    std::cout << ("=================================================================================================================") << std::endl;
     std::cout << ("Press Enter To Continue...") << std::endl;
     std::cin.ignore();
+    system("clear");
 }

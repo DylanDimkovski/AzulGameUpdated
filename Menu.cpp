@@ -3,17 +3,21 @@
 
 void Menu::printMenu()
 {
-    std::cout << TC_LIGHTBLUE << "   AA  " << " ZZZZZ" << " UU  UU" << " LL    " << std::endl
-              << TC_LIGHTBLUE << "  A  A " << "    ZZ" << " UU  UU" << " LL    " << std::endl
-              << TC_LIGHTBLUE << " AAAAAA" << "   ZZ " << " UU  UU" << " LL    " << std::endl
-              << TC_LIGHTBLUE << "AA   AA" << " ZZ   " << " UUUUUU" << " LLLLLL" << std::endl
-              << TC_LIGHTBLUE << "AA   AA" << " ZZZZZ" << " UUUUUU" << " LLLLLL" << std::endl
-              << TC_LIGHTBLUE << "---------------------------" << std::endl << TC_RESET
+    std::cout << TC_LIGHTBLUE << "   AA  " << TC_MAGENTA << " ZZZZZ" << TC_YELLOW << " UU  UU" << TC_WHITE << " LL    " << "  ||" << TC_RESET << std::endl
+              << TC_LIGHTBLUE << "  A  A " << TC_MAGENTA << "    ZZ" << TC_YELLOW << " UU  UU" << TC_WHITE << " LL    " << "  ||" << TC_RESET << std::endl
+              << TC_LIGHTBLUE << " AAAAAA" << TC_MAGENTA << "   ZZ " << TC_YELLOW << " UU  UU" << TC_WHITE << " LL    " << "  ||" << TC_RESET << std::endl
+              << TC_LIGHTBLUE << "AA   AA" << TC_MAGENTA << " ZZ   " << TC_YELLOW << " UUUUUU" << TC_WHITE << " LLLLLL" << "  ||" << TC_RESET << std::endl
+              << TC_LIGHTBLUE << "AA   AA" << TC_MAGENTA << " ZZZZZ" << TC_YELLOW << " UUUUUU" << TC_WHITE << " LLLLLL" << "  OO" << TC_RESET << std::endl
+              << TC_LIGHTBLUE << TC_BOLD << "--------------------------------------------" << std::endl
+              << "Don't forget to type 'help' if you get lost!"
+              << std::endl
+              << "--------------------------------------------" << std::endl << TC_RESET
               << "Please Enter A Number: " << std::endl
-              << "1. New Game" << std::endl
-              << "2. Load Game" << std::endl
-              << "3. Credits" << std::endl
-              << "4. Quit" << std::endl
+              << "1. NEW GAME" << std::endl
+              << "2. LOAD GAME" << std::endl
+              << "3. CREDITS" << std::endl
+              << "4. QUIT" << std::endl
+              << TC_RESET
               << std::endl;
 }
 std::string Menu::getInput()

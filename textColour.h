@@ -7,5 +7,7 @@
 #define TC_BLACK  "\u001b[30"
 #define TC_RESET  "\u001b[0m"
 #define TC_WHITE  "\u001b[37m"
+#define TC_MAGENTA "\u001b[35m"
+#define TC_BOLD "\u001b[1m"
 
 #endif
