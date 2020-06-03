@@ -6,7 +6,7 @@ clean:
 	@echo "cleaning up..."
 	rm *.o Azul
 
-azul: Azul.o Factory.o GameEngine.o Line.o Menu.o Mosaic.o Node.o Player.o Saver.o TileList.o Utils.o
+azul: Azul.o Factory.o GameEngine.o Line.o Menu.o Mosaic.o Node.o Player.o Saver.o TileList.o Utils.o textColour.h
 	g++ -Wall -Werror -std=c++14 -O -g -o Azul $^
 	
 %.o: %.cpp

@@ -1,10 +1,10 @@
 #include "Player.h"
 
-Player::Player(std::string name) : Player(name, 0, new Mosaic())
+Player::Player(std::string name, bool isAi) : name(name), isAi(isAi)
 {
 }
 
-Player::Player(std::string name, int score, Mosaic *mosaic) : name(name), score(score), mosaic(mosaic)
+Player::Player(std::string name, int score, Mosaic *mosaic, bool isAi) : name(name), score(score), mosaic(mosaic), isAi(isAi)
 {
 }
 
@@ -169,4 +169,8 @@ bool Player::hasFirstPlayer()
         ret = true;
     }
     return ret;
+}
+
+bool Player::checkAi(){
+    return isAi;
 }

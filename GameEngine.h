@@ -27,9 +27,9 @@ public:
     //Play a single round
     bool playRound();
     //Add a new player
-    Player *addPlayer(string name);
+    Player *addPlayer(string name, bool isAi);
     //Add an existing player from save
-    Player *addPlayer(std::string name, int score, Mosaic *mosaic);
+    Player *addPlayer(std::string name, int score, Mosaic *mosaic, bool isAi);
     //Helper method for new game
     void addPlayers();
     //Fill bag using seed
@@ -46,6 +46,14 @@ public:
     void setPlayerTurn(int playerIndex);
     //Displays a help menu
     void helpMenu(std::string state);
+    //Displays game board
+    void outputBoard();
+    //Get a random name for the AI
+    std::string nameAi();
+    //Return AI logic
+    std::string returnAiOutput();
+    //Get valid factory choice for AI
+    std::string getSuitableFactory(std::string check, TileType colour);
 
     // Getters
     Factory *getFactory(int);
@@ -65,6 +73,9 @@ public:
     int pileNum;
     int factoryModifier = 0;
     int numberOfCenterPiles = 0;
+    int passThroughKey = 0;
+    int playerCount = 0;
+    int numberOfAiPlayers;
 
 private:
     void changePlayerTurn();

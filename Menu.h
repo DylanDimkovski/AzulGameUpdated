@@ -6,10 +6,15 @@
 #include <vector>
 #include "Player.h"
 #include "Menu.h"
+#include "textColour.h"
 
 class Menu
 {
 public:
+    //Constructor
+    Menu();
+    //Destructor
+    ~Menu();
     //Print main menu
     void printMenu();
     //Get input with getLine
@@ -19,7 +24,7 @@ public:
     //Print given string
     void printMessage(std::string message);
     //Print GUI for player turn
-    void handStart(std::string playerName);
+    void handStart(std::string playerName, std::vector<Player *> player, int numOfPlayers);
     //Print a factory
     void printFactory(int id, string contents, int playerModifier);
     //Print One centerPile
@@ -36,6 +41,11 @@ public:
     void gameOver(Player *player);
     //Print game results with draw
     void gameOver(std::string name1, std::string name2, int score);
+    //Get master_wall
+    TileType getMasterWall(int i, int j);
+
+public:
+    int count;
 
 private:
     //Master wall pattern for comparison
@@ -44,6 +54,7 @@ private:
                                                               BLACK, LIGTHBLUE, DARKBLUE, YELLOW, RED,
                                                               RED, BLACK, LIGTHBLUE, DARKBLUE, YELLOW,
                                                               YELLOW, RED, BLACK, LIGTHBLUE, DARKBLUE};
-};
 
+    std::string*** colourArray;
+};
 #endif // !MENU_H

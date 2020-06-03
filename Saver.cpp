@@ -123,6 +123,7 @@ GameEngine* Saver::load(std::istream& inputStream, Menu* menu)
     }
     std::string player1Name = lines[1];
     int player1Score;
+    bool player1Ai = false;
     try
     {
         player1Score = std::stoi(lines[2]);
@@ -141,6 +142,7 @@ GameEngine* Saver::load(std::istream& inputStream, Menu* menu)
     }
     std::string player2Name = lines[3];
     int player2Score;
+    bool player2Ai = false;
     try
     {
         player2Score = std::stoi(lines[4]);
@@ -227,7 +229,7 @@ GameEngine* Saver::load(std::istream& inputStream, Menu* menu)
         delete gameEngine;
         throw errorMessage;
     }
-    gameEngine->addPlayer(player1Name, player1Score, player1mosaic);
+    gameEngine->addPlayer(player1Name, player1Score, player1mosaic, player1Ai);
 
     // Create player 2 mosaic
     Mosaic* player2mosaic = nullptr;
@@ -240,7 +242,7 @@ GameEngine* Saver::load(std::istream& inputStream, Menu* menu)
         delete gameEngine;
         throw errorMessage;
     }
-    gameEngine->addPlayer(player2Name, player2Score, player2mosaic);
+    gameEngine->addPlayer(player2Name, player2Score, player2mosaic, player2Ai);
 
 
     // Create lid

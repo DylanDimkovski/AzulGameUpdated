@@ -9,9 +9,9 @@ class Player
 {
 public:
     //New player
-    Player(std::string name);
+    Player(std::string name, bool isAi);
     //Player from save
-    Player(std::string name, int score, Mosaic *mosaic);
+    Player(std::string name, int score, Mosaic *mosaic, bool isAi);
     ~Player();
     //Return name
     std::string getName();
@@ -25,6 +25,8 @@ public:
     bool hasWon();
     //Check whether a player has the FP tile
     bool hasFirstPlayer();
+    //Check if player is A.I
+    bool checkAi();
 
 private:
     //Helper to score single line
@@ -33,9 +35,11 @@ private:
     int calcRow(int index, int line);
     //Calculate score for a column
     int calcCol(int index, int line);
+
     std::string name;
     int score;
     Mosaic *mosaic;
+    bool isAi;
     TileType master_wall[NUMBER_OF_LINES][NUMBER_OF_LINES] = {DARKBLUE, YELLOW, RED, BLACK, LIGTHBLUE,
                                                               LIGTHBLUE, DARKBLUE, YELLOW, RED, BLACK,
                                                               BLACK, LIGTHBLUE, DARKBLUE, YELLOW, RED,

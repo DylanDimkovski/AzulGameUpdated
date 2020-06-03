@@ -5,6 +5,7 @@
 #include <iostream>
 #include <algorithm>
 #include <random>
+#include <unistd.h>
 
 GameEngine::GameEngine(Menu *menu) : players(),
                                      factories(),
@@ -37,6 +38,7 @@ GameEngine::~GameEngine()
     for (Player *player : players)
         if (player != nullptr)
             delete player;
+    delete menu;
 }
 
 bool GameEngine::playGame(char const *argv)
@@ -145,54 +147,7 @@ bool GameEngine::playRound()
 
     while (!exit && !roundOver())
     {
-        menu->printMessage("===========================================================================");
-
-        for (int i = 0; i < 1; i++)
-        {
-            playerTurnID = players[i];
-            if (numberOfPlayers == 4)
-            {
-                menu->printMosaic(players, 0, 1);
-                menu->printMosaic(players, 2, 3);
-            }
-            else if (numberOfPlayers == 3)
-            {
-                menu->printMosaic(players, 0, 1);
-                menu->printMosaic(players, 2);
-            }
-            else
-            {
-                menu->printMosaic(players, 0, 1);
-            }
-        }
-
-        //Print player turn GUI
-        playerTurnID = players[playerTurnCount];
-        menu->handStart(playerTurnID->getName());
-        if (numberOfCenterPiles == 1)
-        {
-            menu->printFactory(&centerPileOne);
-        }
-        else
-        {
-            menu->printFactory(&centerPileOne, &centerPileTwo);
-        }
-
-        for (int i = 0; i < NUM_FACTORIES + factoryModifier; i++)
-        {
-            menu->printFactory(i + 1, factories[i]->toString(), numberOfPlayers);
-        }
-        std::cout << "Broken: "
-                  << playerTurnID->getMosaic()->getBrokenTiles()->toString()
-                  << std::endl;
-
-        std::cout << "==========" << std::endl;
-        for (int i = 0; i < numberOfPlayers; i++)
-        {
-            Player *player = players[i];
-            menu->printScore(player->getName(), player->getScore());
-        }
-        std::cout << "==========" << std::endl;
+        outputBoard();
 
         //Bool to check whether input command has been executed
         bool inputDone = false;
@@ -200,7 +155,18 @@ bool GameEngine::playRound()
         //Handle user input
         do
         {
-            std::stringstream ss(menu->getInput());
+            std::stringstream ss;
+
+            if (players[playerTurnCount]->checkAi() == false)
+            {
+                ss << (menu->getInput());
+            }
+            else if (players[playerTurnCount]->checkAi() == true)
+            {
+                //Ai Functionality
+                ss << returnAiOutput();
+            }
+
             if (!std::cin.eof())
             {
                 string errorMessage = "Command not recognised";
@@ -208,7 +174,11 @@ bool GameEngine::playRound()
 
                 ss >> command;
 
-                if (command == "turn")
+                if (command == "help")
+                {
+                    helpMenu("game");
+                }
+                else if (command == "turn")
                 {
                     errorMessage = "Invalid syntax for turn command";
                     unsigned int factoryNum = NUM_FACTORIES + 1, lineNum = NUMBER_OF_LINES + 1;
@@ -283,29 +253,38 @@ bool GameEngine::playRound()
                                 //If drawing from factory
                                 else
                                 {
-                                    //Check which center factory to discard too
-                                    menu->printMessage("Please Enter Which Center Factory to add excess tiles: ");
-
-                                    std::string numberConversion;
-                                    bool inputCheck = false;
-                                    while (!inputCheck)
+                                    if (numberOfCenterPiles == 1)
                                     {
-                                        numberConversion = menu->getInput();
+                                        pileNum = 10;
+                                    }
+                                    else if (numberOfCenterPiles == 2)
+                                    {
+                                        menu->printMessage("Please Enter Which Center Factory to add excess tiles: ");
 
-                                        if (numberConversion == "11" && numberOfCenterPiles == 1)
-                                        {
-                                            std::cout << "Invalid Center Pile, Try Again!"
-                                                      << std::endl;
-                                        }
-                                        else if (numberConversion == "10" || numberConversion == "11")
+                                        std::string numberConversion;
+                                        bool inputCheck = false;
+
+                                        //Check if AI is playing
+                                        if (players[playerTurnCount]->checkAi() == true)
                                         {
                                             inputCheck = true;
-                                            pileNum = std::stoi(numberConversion);
+                                            pileNum = rand() % 2 + 10;
                                         }
-                                        else
+
+                                        while (!inputCheck)
                                         {
-                                            std::cout << "Invalid Center Pile, Try Again!"
-                                                      << std::endl;
+                                            numberConversion = menu->getInput();
+
+                                            if (numberConversion == "10" || numberConversion == "11")
+                                            {
+                                                inputCheck = true;
+                                                pileNum = std::stoi(numberConversion);
+                                            }
+                                            else
+                                            {
+                                                std::cout << "Invalid Center Pile, Try Again!"
+                                                          << std::endl;
+                                            }
                                         }
                                     }
 
@@ -360,15 +339,16 @@ bool GameEngine::playRound()
                                     }
                                     else
                                         errorMessage = "Selected factory is empty";
-                                }
 
-                                // If the input has been executed
-                                if (inputDone)
-                                {
-                                    //Change player turn
-                                    changePlayerTurn();
-                                    system("clear");
-                                    std::cout << "Turn Successful!";
+                                    // If the input has been executed
+                                    if (inputDone)
+                                    {
+                                        sleep(2);
+                                        //Change player turn
+                                        changePlayerTurn();
+                                        system("clear");
+                                        std::cout << "Turn Successful!";
+                                    }
                                 }
                             }
                             else
@@ -400,8 +380,17 @@ bool GameEngine::playRound()
                     if (inputDone)
                         menu->printMessage("Game successfully saved to '" + fileName + "'");
                 }
-                if (!inputDone)
+                if (!inputDone && command != "help")
+                {
                     menu->printMessage("Invalid input: " + errorMessage + ", try again");
+                    sleep(1);
+                    system("clear");
+                    outputBoard();
+                }
+                else if (!inputDone && command == "help")
+                {
+                    outputBoard();
+                }
             }
             else
             {
@@ -436,7 +425,22 @@ bool GameEngine::validLineNum(int lineNum)
 
 bool GameEngine::validFactoryNum(int factoryNum)
 {
-    return factoryNum >= 0 && factoryNum <= NUM_FACTORIES + factoryModifier;
+    bool factoryCheck;
+
+    if (factoryNum >= 0 && factoryNum >= 0 && factoryNum <= NUM_FACTORIES + factoryModifier)
+    {
+        factoryCheck = true;
+    }
+    else if (factoryNum == 10 || factoryNum == 11)
+    {
+        factoryCheck = true;
+    }
+    else
+    {
+        factoryCheck = false;
+    }
+
+    return factoryCheck;
 }
 
 bool GameEngine::roundOver()
@@ -567,15 +571,15 @@ void GameEngine::fillFactories(Factory *factories[])
     }
 }
 
-Player *GameEngine::addPlayer(string name)
+Player *GameEngine::addPlayer(string name, bool isAi)
 {
     //creates a new player
-    return addPlayer(name, 0, new Mosaic());
+    return addPlayer(name, 0, new Mosaic(), isAi);
 }
 
-Player *GameEngine::addPlayer(std::string name, int score, Mosaic *mosaic)
+Player *GameEngine::addPlayer(std::string name, int score, Mosaic *mosaic, bool isAi)
 {
-    players.push_back(new Player(name, score, mosaic));
+    players.push_back(new Player(name, score, mosaic, isAi));
     return players.back();
 }
 
@@ -587,7 +591,7 @@ void GameEngine::addPlayers()
     std::string strToInt;
     do
     {
-        menu->printMessage("Please Enter Number of Players: (2-4)");
+        menu->printMessage("Please Enter Number of Total Players: (2-4)");
         strToInt = menu->getInput();
         if (strToInt == "2" || strToInt == "3" || strToInt == "4")
         {
@@ -604,27 +608,49 @@ void GameEngine::addPlayers()
         }
     } while (!isValidNum);
 
+    isValidNum = false;
+    numberOfAiPlayers = 0;
+    do
+    {
+        menu->printMessage("How many of those players would you like to be Computer Controlled?");
+        strToInt = menu->getInput();
+        if (std::stoi(strToInt) <= numberOfPlayers)
+        {
+            isValidNum = true;
+            numberOfAiPlayers = std::stoi(strToInt);
+        }
+
+    } while (!isValidNum);
+
     //Checks for player names and adds them to player vector
     string name;
-
-    for (int i = 0; i < numberOfPlayers; i++)
+    if (numberOfPlayers != numberOfAiPlayers)
     {
-        bool hasValidName = true;
-        do
+        for (int i = 0; i < numberOfPlayers - numberOfAiPlayers; i++)
         {
-            std::cout << "Please Enter the Name of Player " << i + 1 << ": " << std::endl;
-            name = menu->getInput();
-            hasValidName = isNotWhiteSpace(name);
-            if (!hasValidName)
-                menu->printMessage("Error - Invalid Name");
-            if (name == "help")
+            bool hasValidName = true;
+            do
             {
-                helpMenu("new");
-                hasValidName = false;
-            }
-        } while (!hasValidName && !std::cin.eof());
-        addPlayer(name);
+                std::cout << "Please Enter the Name of Player " << i + 1 << ": " << std::endl;
+                name = menu->getInput();
+                hasValidName = isNotWhiteSpace(name);
+                if (!hasValidName)
+                    menu->printMessage("Error - Invalid Name");
+                if (name == "help")
+                {
+                    helpMenu("new");
+                    hasValidName = false;
+                }
+            } while (!hasValidName && !std::cin.eof());
+            addPlayer(name, false);
+        }
     }
+    //Adds Computer Players
+    for (int i = 0; i < numberOfAiPlayers; i++)
+    {
+        addPlayer(nameAi(), true);
+    }
+
     bool isValid = false;
     while (!isValid)
     {
@@ -635,7 +661,8 @@ void GameEngine::addPlayers()
             isValid = true;
             numberOfCenterPiles = std::stoi(strToInt);
         }
-        else if(strToInt == "help"){
+        else if (strToInt == "help")
+        {
             helpMenu("new");
         }
         else
@@ -645,7 +672,6 @@ void GameEngine::addPlayers()
     }
 
     system("clear");
-    std::cout << "Let's Play!";
 }
 
 std::vector<TileType> GameEngine::getCenterPile()
@@ -698,32 +724,283 @@ void GameEngine::helpMenu(std::string state)
 {
     system("clear");
     std::cout << ("=================================================== Help Menu ===================================================") << std::endl;
-    std::cout << ("Command:                    Example:                Description") << std::endl;
+    std::cout << ("Command:                         Example:                Description") << std::endl;
 
     if (state == "menu")
     {
-        std::cout << "<option Number>:            2                       Selects an option from the menu with the corresponding number." << std::endl;
-        std::cout << "4 / ^D:                     Exit Game               Ends the Game." << std::endl;
-        std::cout << "help:                       help                    Prints a help menu." << std::endl;
+        std::cout << "<option Number>:                 2                       Selects an option from the menu with the corresponding number." << std::endl;
+        std::cout << "4 / ^D:                          Exit Game               Ends the Game." << std::endl;
+        std::cout << "help:                            help                    Prints a help menu." << std::endl;
     }
     else if (state == "load")
     {
-        std::cout << "saves/<filename>:           saves/testfile         Loads from file called 'testfile'." << std::endl;
-        std::cout << "^D :                        Exit Game              Ends the Game." << std::endl;
+        std::cout << "saves/<filename>:                saves/testfile          Loads from file called 'testfile'." << std::endl;
+        std::cout << "^D :                             Exit Game               Ends the Game." << std::endl;
     }
     else if (state == "new")
     {
-        std::cout << "^D :                        Exit Game              Ends the Game." << std::endl;
+        std::cout << "^D :                             Exit Game               Ends the Game." << std::endl;
         std::cout << std::endl;
         std::cout << "Please Follow The Prompt and enter in User Details so the Game can Begin!!" << std::endl;
         std::cout << "Did you know that a hashtag symbol is called an octothorpe?" << std::endl;
     }
-    else if(state == "game"){
-        
+    else if (state == "game")
+    {
+        std::cout << "^D :                             Exit Game               Ends the Game." << std::endl;
+        std::cout << "turn <Factory> <Colour> <Line>   turn 2 R 2              Input to determine what move to make E.X." << std::endl;
+        std::cout << "                                                         Takes all R tiles from Factory 2 and places into Line 2" << std::endl;
     }
 
     std::cout << ("=================================================================================================================") << std::endl;
     std::cout << ("Press Enter To Continue...") << std::endl;
     std::cin.ignore();
     system("clear");
+}
+
+void GameEngine::outputBoard()
+{
+    menu->printMessage("===========================================================================");
+
+    for (int i = 0; i < 1; i++)
+    {
+        playerTurnID = players[i];
+        if (numberOfPlayers == 4)
+        {
+            menu->printMosaic(players, 0, 1);
+            menu->printMosaic(players, 2, 3);
+        }
+        else if (numberOfPlayers == 3)
+        {
+            menu->printMosaic(players, 0, 1);
+            menu->printMosaic(players, 2);
+        }
+        else
+        {
+            menu->printMosaic(players, 0, 1);
+        }
+    }
+
+    //Print player turn GUI
+    playerTurnID = players[playerTurnCount];
+    menu->handStart(playerTurnID->getName(), players, numberOfPlayers);
+    if (numberOfCenterPiles == 1)
+    {
+        menu->printFactory(&centerPileOne);
+    }
+    else
+    {
+        menu->printFactory(&centerPileOne, &centerPileTwo);
+    }
+
+    for (int i = 0; i < NUM_FACTORIES + factoryModifier; i++)
+    {
+        menu->printFactory(i + 1, factories[i]->toString(), numberOfPlayers);
+    }
+
+    std::cout << ("===========================================================================") << std::endl;
+    if (numberOfPlayers == 2)
+    {
+        passThroughKey = 1;
+    }
+    else
+    {
+        passThroughKey = 2;
+    }
+    playerCount = 0;
+    for (int i = 0; i < passThroughKey; i++)
+    {
+        std::cout << players[playerCount]->getName() << "'s Broken Pile: "
+                  << players[playerCount]->getMosaic()->getBrokenTiles()->toString()
+                  << "  ";
+        if (numberOfPlayers == 4 || playerCount == 0)
+        {
+            std::cout
+                << players[playerCount + 1]->getName() << "'s Broken Pile: "
+                << players[playerCount + 1]->getMosaic()->getBrokenTiles()->toString()
+                << "  || ";
+        }
+        else
+        {
+            std::cout << "                      ";
+        }
+        std::cout
+            << players[playerCount]->getName() << " Score: "
+            << players[playerCount]->getScore()
+            << "  ";
+        if (numberOfPlayers == 4 || playerCount == 0)
+        {
+            std::cout
+                << players[playerCount + 1]->getName() << " Score: "
+                << players[playerCount + 1]->getScore();
+        }
+        std::cout << std::endl;
+        if (numberOfPlayers >= 3)
+        {
+            playerCount = 2;
+        }
+    }
+    std::cout << ("===========================================================================") << std::endl;
+}
+
+std::string GameEngine::nameAi()
+{
+    int num = 0;
+    std::string names[] = {
+        "Michaele",
+        "Deidre",
+        "Hoa",
+        "Kandy",
+        "Tonita",
+        "Fonda",
+        "Daisey",
+        "Kim",
+        "Guy",
+        "Myrtis",
+        "Han",
+        "Jenna",
+        "Bennett",
+        "Pearline",
+        "Henriett",
+        "Rikki",
+        "Corey",
+        "Genie",
+        "William",
+        "Tresa",
+        "Patty",
+        "Concetta",
+        "Alvina",
+        "Chanell",
+        "Torrie",
+        "Matthew",
+        "Arnita",
+        "Delora",
+        "Elfreda",
+        "Debra",
+    };
+    num = (rand() % 30);
+    return names[num];
+}
+
+std::string GameEngine::returnAiOutput()
+{
+    //Create check variables
+    std::string output, lineCheck;
+    bool lineOneCheck = false;
+    bool lineFilledCheck = false;
+    //bool mosaicIsFilled[5] = {false, false, false, false, false};
+    TileType colour;
+    int row = 1, column = 0;
+
+    int lineSize = players[playerTurnCount]->getMosaic()->getLine(0)->getMaxSize();
+    int numTiles = players[playerTurnCount]->getMosaic()->getLine(0)->getNumTiles();
+
+    for (int i = 0; i < 5 - lineSize; i++)
+    {
+        lineCheck += "  ";
+    }
+
+    for (int i = 0; i < lineSize - numTiles; i++)
+    {
+        lineCheck += ". ";
+    }
+
+    output += "turn ";
+
+    //Check if Top Row is filled. If Not Fill it with Appropiate Colour
+    if ("        . " == lineCheck)
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            if (!players[playerTurnCount]->getMosaic()->isFilled(0, i) && !lineOneCheck)
+            {
+                //lineOneCheck = true;
+                colour = menu->getMasterWall(0, i);
+                output += getSuitableFactory("First Line", colour) + " " + std::string(1, (char)colour) + " 1";
+                lineOneCheck = true;
+                std::cout << output << std::endl;
+            }
+        }
+    }
+
+    //If the Top Row is already filled. Or can't be filled this round, then fill Adjacent Tiles from center out.
+    if (lineOneCheck == false)
+    {
+        do
+        {
+            if (!players[playerTurnCount]->getMosaic()->isFilled(row, column))
+            {
+                lineFilledCheck = true;
+                colour = menu->getMasterWall(row, column);
+                players[playerTurnCount]->getMosaic()->setFilled(row,column, true);  
+            }
+            else
+            {
+                column++;
+            }
+            if (column == 4)
+            {
+                row++;
+                column = 0;
+            }
+        } while (!lineFilledCheck);
+
+        output += getSuitableFactory("First Line", colour) + " " + std::string(1, (char)colour) + " " + std::to_string(row + 1);
+        std::cout << output << std::endl;
+    }
+
+    //Using a point based system check if the the ai can win at the end of the round. If yes then end game.
+
+    return output;
+}
+
+std::string GameEngine::getSuitableFactory(std::string check, TileType colour)
+{
+    std::string returnVariable;
+    //bool logicCheck = false;
+    bool emptyFactories = true;
+    if (check == "First Line")
+    {
+
+        //Check if factories have the colour
+        for (int i = 0; i < NUM_FACTORIES + factoryModifier; i++)
+        {
+            if (factories[i]->contains(colour) && emptyFactories == true)
+            {
+                returnVariable = std::to_string(i + 1);
+                emptyFactories = false;
+            }
+        }
+
+        //If the factories are empty and the game only has 1 Center Pile
+        if (emptyFactories == true && numberOfCenterPiles == 1)
+        {
+            for (int i = 0; i < (int)centerPileOne.size(); i++)
+            {
+                if (centerPileOne[i] == colour)
+                {
+                    returnVariable = "10";
+                }
+            }
+        }
+
+        //If factories are empty and the game has 2 Center Piles
+        else if (emptyFactories == true && numberOfCenterPiles == 2)
+        {
+            for (int i = 0; i < (int)centerPileOne.size(); i++)
+            {
+                if (centerPileOne[i] == colour)
+                {
+                    returnVariable = "10";
+                }
+            }
+            for (int i = 0; i < (int)centerPileTwo.size(); i++)
+            {
+                if (centerPileTwo[i] == colour)
+                {
+                    returnVariable = "11";
+                }
+            }
+        }
+    }
+    return returnVariable;
 }
