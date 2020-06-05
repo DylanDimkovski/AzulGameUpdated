@@ -1,4 +1,5 @@
 #include "Line.h"
+#include <iostream>
 
 Line::Line(int maxSize) : Line(maxSize, 0, NOTILE)
 {
@@ -61,6 +62,7 @@ std::string Line::toString()
 
 bool Line::canAddTiles(TileType tileType)
 {
+    std::cout << maxSize << ", " << numTiles << std::endl;
     return  tileType != FIRSTPLAYER && tileType != NOTILE 
         && (this->tileType == NOTILE || this->tileType == tileType)
         && numTiles < maxSize;

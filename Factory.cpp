@@ -75,6 +75,7 @@ bool Factory::isEmpty()
     bool isEmpty = false;
     for (int i = 0; i < FACTORY_SIZE; ++i)
         isEmpty |= tiles[i] == NOTILE;
+
     return isEmpty;
 }
 

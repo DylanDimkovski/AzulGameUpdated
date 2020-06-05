@@ -76,15 +76,16 @@ public:
     int passThroughKey = 0;
     int playerCount = 0;
     int numberOfAiPlayers;
+    std::vector<int> drawnPlayerId;
 
 private:
     void changePlayerTurn();
     bool hasPlayerWon();
-    int drawFromCenter(TileType colour, std::vector<TileType> centerPile);
-    bool containsFirstPlayer();
+    int drawFromCenter(TileType colour, std::vector<TileType>& centerPile);
+    bool containsFirstPlayer(std::vector<TileType> &centerPileOne, std::vector<TileType> &centerPileTwo);
     bool roundOver();
     bool factoriesAreEmpty();
-    bool centerPileContains(TileType tileType);
+    bool centerPileContains(TileType tileType, std::vector<TileType> centerPile);
     bool validLineNum(int lineNum);
     bool validFactoryNum(int factoryNum);
 

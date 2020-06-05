@@ -95,6 +95,7 @@ std::string TileList::toString()
     while (currentNode != nullptr)
     {
         result += char(currentNode->getValue());
+        result += ", ";
         currentNode = currentNode->getNextNode();
     }
     return result;

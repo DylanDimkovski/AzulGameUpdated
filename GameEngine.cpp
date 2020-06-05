@@ -88,26 +88,44 @@ bool GameEngine::playGame()
     //Check if a player has won after each round
     if (hasPlayerWon())
     {
-        //Game is a draw
-        if (players[0]->getScore() == players[1]->getScore())
+        //Check if and store which players have the same score
+        Player *winningPlayer = players[playerTurnCount];
+        std::vector<Player *> allDrawnPlayers;
+        for (int i = 0; i < (int)players.size(); i++)
         {
-            //Print results
-            menu->gameOver(players[0]->getName(), players[1]->getName(), players[0]->getScore());
-        }
-        //Set pointer to winning player
-        else
-        {
-            Player *winningPlayer = playerTurnID;
-            for (auto player : players)
+            if (!((i + 1) == (int)players.size()))
             {
-                if (player->getScore() > winningPlayer->getScore())
+                if (players[i] == players[i + 1])
                 {
-                    winningPlayer = player;
+                    drawnPlayerId.push_back(i);
+                    drawnPlayerId.push_back(i);
                 }
             }
-            //Print results
-            menu->gameOver(winningPlayer);
         }
+
+        //Find who has the highest Score
+        for (auto player : players)
+        {
+            if (player->getScore() > winningPlayer->getScore())
+            {
+                winningPlayer = player;
+            }
+        }
+
+        allDrawnPlayers.push_back(winningPlayer);
+
+        //Check if anyone has the same highest score
+        for (int i = 0; i < (int)drawnPlayerId.size(); i++)
+        {
+            Player *playerCheck;
+            if (winningPlayer->getScore() == players[drawnPlayerId[i]]->getScore())
+            {
+                playerCheck = players[drawnPlayerId[i]];
+                allDrawnPlayers.push_back(playerCheck);
+            }
+        }
+
+        menu->gameOver(allDrawnPlayers);
     }
     return exit;
 }
@@ -198,7 +216,8 @@ bool GameEngine::playRound()
                                 //If drawing from center pile
                                 if (factoryNum == 10)
                                 {
-                                    if (!centerPileOne.empty() && centerPileContains(tileType))
+
+                                    if (!centerPileOne.empty() && centerPileContains(tileType, centerPileOne))
                                     {
                                         //If moving tiles straight to broken line
                                         if (lineNum == 5)
@@ -210,7 +229,7 @@ bool GameEngine::playRound()
                                         else if (!playerTurnID->getMosaic()->isFilled(lineNum, tileType) &&
                                                  playerTurnID->getMosaic()->getLine(lineNum)->canAddTiles(tileType))
                                         {
-                                            if (containsFirstPlayer())
+                                            if (containsFirstPlayer(centerPileOne, centerPileTwo))
                                             {
                                                 playerTurnID->getMosaic()->getBrokenTiles()->addFront(FIRSTPLAYER);
                                             }
@@ -223,9 +242,9 @@ bool GameEngine::playRound()
                                     else
                                         errorMessage = "Center pile does not contain specified tile";
                                 }
-                                if (factoryNum == 11)
+                                else if (factoryNum == 11)
                                 {
-                                    if (!centerPileTwo.empty() && centerPileContains(tileType))
+                                    if (!centerPileTwo.empty() && centerPileContains(tileType, centerPileTwo))
                                     {
                                         //If moving tiles straight to broken line
                                         if (lineNum == 5)
@@ -237,7 +256,7 @@ bool GameEngine::playRound()
                                         else if (!playerTurnID->getMosaic()->isFilled(lineNum, tileType) &&
                                                  playerTurnID->getMosaic()->getLine(lineNum)->canAddTiles(tileType))
                                         {
-                                            if (containsFirstPlayer())
+                                            if (containsFirstPlayer(centerPileOne, centerPileTwo))
                                             {
                                                 playerTurnID->getMosaic()->getBrokenTiles()->addFront(FIRSTPLAYER);
                                             }
@@ -339,16 +358,15 @@ bool GameEngine::playRound()
                                     }
                                     else
                                         errorMessage = "Selected factory is empty";
-
-                                    // If the input has been executed
-                                    if (inputDone)
-                                    {
-                                        sleep(2);
-                                        //Change player turn
-                                        changePlayerTurn();
-                                        system("clear");
-                                        std::cout << "Turn Successful!";
-                                    }
+                                }
+                                // If the input has been executed
+                                if (inputDone)
+                                {
+                                    sleep(2);
+                                    //Change player turn
+                                    changePlayerTurn();
+                                    system("clear");
+                                    std::cout << "Turn Successful!";
                                 }
                             }
                             else
@@ -406,7 +424,7 @@ bool GameEngine::playRound()
         {
             if (player->hasFirstPlayer())
             {
-                playerTurnID = player;
+                players[playerTurnCount] = player;
             }
 
             for (TileType tile : player->calcScore())
@@ -445,8 +463,16 @@ bool GameEngine::validFactoryNum(int factoryNum)
 
 bool GameEngine::roundOver()
 {
-    // centerPileOne.empty() && factoriesAreEmpty(); equivalent but less efficient
-    return !(!centerPileOne.empty() || !factoriesAreEmpty());
+    bool returnValue = true;
+    if (numberOfCenterPiles == 1)
+    {
+        returnValue = centerPileOne.empty() && factoriesAreEmpty();
+    }
+    else if (numberOfCenterPiles == 2)
+    {
+        returnValue = centerPileOne.empty() && factoriesAreEmpty() && centerPileTwo.empty();
+    }
+    return returnValue;
 }
 
 // returns true if factories are empty
@@ -505,7 +531,7 @@ void GameEngine::fillBag(int seed)
     }
 }
 
-int GameEngine::drawFromCenter(TileType colour, std::vector<TileType> centerPile)
+int GameEngine::drawFromCenter(TileType colour, std::vector<TileType> &centerPile)
 {
     int count = 0;
     std::vector<int> remove;
@@ -524,21 +550,40 @@ int GameEngine::drawFromCenter(TileType colour, std::vector<TileType> centerPile
     for (int i = 0; i < (int)remove.size(); i++)
     {
         // erase element at index
-        centerPile.erase(centerPileOne.begin() + (remove[i] - decrement));
+        centerPile.erase(centerPile.begin() + (remove[i] - decrement));
         // Reduce all future indexes by 1
         decrement++;
     }
     return count;
 }
 
-bool GameEngine::containsFirstPlayer()
+bool GameEngine::containsFirstPlayer(std::vector<TileType> &centerPileOne, std::vector<TileType> &centerPileTwo)
 {
     bool contains = false;
-    if (centerPileOne[0] == FIRSTPLAYER)
+    if (numberOfCenterPiles == 2)
     {
-        centerPileOne.erase(centerPileOne.begin());
-        contains = true;
+        if (centerPileOne[0] == FIRSTPLAYER)
+        {
+            centerPileOne.erase(centerPileOne.begin());
+            centerPileTwo.erase(centerPileTwo.begin());
+            contains = true;
+        }
+        else if (centerPileTwo[0] == FIRSTPLAYER)
+        {
+            centerPileOne.erase(centerPileOne.begin());
+            centerPileTwo.erase(centerPileTwo.begin());
+            contains = true;
+        }
     }
+    else if (numberOfCenterPiles == 1)
+    {
+        if (centerPileOne[0] == FIRSTPLAYER)
+        {
+            centerPileOne.erase(centerPileOne.begin());
+            contains = true;
+        }
+    }
+
     return contains;
 }
 
@@ -708,16 +753,16 @@ bool GameEngine::hasPlayerWon()
     return playerWon;
 }
 
-bool GameEngine::centerPileContains(TileType tileType)
+bool GameEngine::centerPileContains(TileType tileType, std::vector<TileType> centerPile)
 {
-    bool centerPileOneContainsTile = false;
+    bool centerPileContainsTile = false;
     unsigned int index = 0;
-    while (!centerPileOneContainsTile && index < centerPileOne.size())
+    while (!centerPileContainsTile && index < centerPile.size())
     {
-        centerPileOneContainsTile = centerPileOne[index] == tileType;
+        centerPileContainsTile = centerPile[index] == tileType;
         index++;
     }
-    return centerPileOneContainsTile;
+    return centerPileContainsTile;
 }
 
 void GameEngine::helpMenu(std::string state)
@@ -884,12 +929,11 @@ std::string GameEngine::nameAi()
 std::string GameEngine::returnAiOutput()
 {
     //Create check variables
-    std::string output, lineCheck;
+    std::string output, lineCheck, mosaicColour;
     bool lineOneCheck = false;
     bool lineFilledCheck = false;
-    //bool mosaicIsFilled[5] = {false, false, false, false, false};
-    TileType colour;
-    int row = 1, column = 0;
+    int line = 0;
+    TileType colour = NOTILE;
 
     int lineSize = players[playerTurnCount]->getMosaic()->getLine(0)->getMaxSize();
     int numTiles = players[playerTurnCount]->getMosaic()->getLine(0)->getNumTiles();
@@ -906,16 +950,16 @@ std::string GameEngine::returnAiOutput()
 
     output += "turn ";
 
-    //Check if Top Row is filled. If Not Fill it with Appropiate Colour
+    //Check if Top Row is filled. If Not Fill it with valid Colour
     if ("        . " == lineCheck)
     {
+        line = 1;
         for (int i = 0; i < 5; i++)
         {
             if (!players[playerTurnCount]->getMosaic()->isFilled(0, i) && !lineOneCheck)
             {
-                //lineOneCheck = true;
                 colour = menu->getMasterWall(0, i);
-                output += getSuitableFactory("First Line", colour) + " " + std::string(1, (char)colour) + " 1";
+                output += getSuitableFactory("First Line", colour) + " " + std::string(1, (char)colour) + " " + std::to_string(line);
                 lineOneCheck = true;
                 std::cout << output << std::endl;
             }
@@ -925,26 +969,63 @@ std::string GameEngine::returnAiOutput()
     //If the Top Row is already filled. Or can't be filled this round, then fill Adjacent Tiles from center out.
     if (lineOneCheck == false)
     {
+        line = 2;
+        int row = 1, column = 0;
         do
         {
-            if (!players[playerTurnCount]->getMosaic()->isFilled(row, column))
+            std::cout << players[playerTurnCount]->getMosaic()->getLine(line)->getNumTiles() << ", Line: " << line << std::endl;
+            
+            //Check for partially filled line
+            if (players[playerTurnCount]->getMosaic()->getLine(line)->getNumTiles() > 0)
             {
-                lineFilledCheck = true;
-                colour = menu->getMasterWall(row, column);
-                players[playerTurnCount]->getMosaic()->setFilled(row,column, true);  
+                colour = players[playerTurnCount]->getMosaic()->getLine(line)->getTileType();
+                if (players[playerTurnCount]->getMosaic()->getLine(line)->canAddTiles(colour))
+                {
+                    lineFilledCheck = true;
+                }
             }
-            else
+            //If line is empty then fill it with colour from wall
+            else if (players[playerTurnCount]->getMosaic()->isFilled(row, column) == false)
+            {
+                colour = menu->getMasterWall(row, column);
+
+                std::string colourAvaliable = getSuitableFactory("First Line", colour);
+                if (colourAvaliable == "")
+                {
+                    lineFilledCheck = false;
+                }
+                else
+                {
+                    lineFilledCheck = true;
+                }
+            }
+
+            //If no line can be filled with the proper colour, move onto next column
+            if (lineFilledCheck == false)
             {
                 column++;
-            }
-            if (column == 4)
-            {
-                row++;
-                column = 0;
+                line++;
+
+                if (column == 4)
+                {
+                    row++;
+                    column = 0;
+                }
+
+                if (row == 4)
+                {
+                    row = 1;
+                    column = 0;
+                }
+
+                if (line == 5)
+                {
+                    line = 2;
+                }
             }
         } while (!lineFilledCheck);
 
-        output += getSuitableFactory("First Line", colour) + " " + std::string(1, (char)colour) + " " + std::to_string(row + 1);
+        output += getSuitableFactory("First Line", colour) + " " + std::string(1, (char)colour) + " " + std::to_string(line);
         std::cout << output << std::endl;
     }
 
@@ -971,33 +1052,37 @@ std::string GameEngine::getSuitableFactory(std::string check, TileType colour)
             }
         }
 
-        //If the factories are empty and the game only has 1 Center Pile
-        if (emptyFactories == true && numberOfCenterPiles == 1)
+        //If the factories don't contain the colour check the center piles
+        if (emptyFactories == true)
         {
-            for (int i = 0; i < (int)centerPileOne.size(); i++)
+            //If the factories are empty and the game only has 1 Center Pile
+            if (numberOfCenterPiles == 1)
             {
-                if (centerPileOne[i] == colour)
+                for (int i = 0; i < (int)centerPileOne.size(); i++)
                 {
-                    returnVariable = "10";
+                    if (centerPileOne[i] == colour)
+                    {
+                        returnVariable = "10";
+                    }
                 }
             }
-        }
 
-        //If factories are empty and the game has 2 Center Piles
-        else if (emptyFactories == true && numberOfCenterPiles == 2)
-        {
-            for (int i = 0; i < (int)centerPileOne.size(); i++)
+            //If factories are empty and the game has 2 Center Piles
+            else if (numberOfCenterPiles == 2)
             {
-                if (centerPileOne[i] == colour)
+                for (int i = 0; i < (int)centerPileOne.size(); i++)
                 {
-                    returnVariable = "10";
+                    if (centerPileOne[i] == colour)
+                    {
+                        returnVariable = "10";
+                    }
                 }
-            }
-            for (int i = 0; i < (int)centerPileTwo.size(); i++)
-            {
-                if (centerPileTwo[i] == colour)
+                for (int i = 0; i < (int)centerPileTwo.size(); i++)
                 {
-                    returnVariable = "11";
+                    if (centerPileTwo[i] == colour)
+                    {
+                        returnVariable = "11";
+                    }
                 }
             }
         }

@@ -1,33 +1,12 @@
 #include "Menu.h"
 #include "textColour.h"
 
-    Menu::Menu(){
-    colourArray = new std::string**[5];
-    std::string tempArray[5][5] = {TC_BG_DARKBLUE, TC_BG_YELLOW, TC_BG_RED, TC_BG_BLACK, TC_BG_LIGHTBLUE,
-                                    TC_BG_LIGHTBLUE, TC_BG_DARKBLUE, TC_BG_YELLOW, TC_BG_RED, TC_BG_BLACK,
-                                    TC_BG_BLACK, TC_BG_LIGHTBLUE, TC_BG_DARKBLUE, TC_BG_YELLOW, TC_BG_RED,
-                                    TC_BG_RED, TC_BG_BLACK, TC_BG_LIGHTBLUE, TC_BG_DARKBLUE, TC_BG_YELLOW,
-                                    TC_BG_YELLOW, TC_BG_RED, TC_BG_BLACK, TC_BG_LIGHTBLUE, TC_BG_DARKBLUE};
-    for (int i = 0; i < 5; i++)
-    {
-        colourArray[i] = new std::string*[5];
-        for (int j = 0; j < 5; j++)
-        {
-            colourArray[i][j] = new std::string(tempArray[i][j]);
-        }   
-    }
+Menu::Menu()
+{
 }
 
-    Menu::~Menu(){
-    for (int i = 0; i < 5; i++)
-    {
-        for (int j = 0; j < 5; j++)
-        {
-            delete colourArray[i][j];
-        }
-        delete[] colourArray[i];
-    }
-    delete[] colourArray;
+Menu::~Menu()
+{
 }
 
 void Menu::printMenu()
@@ -179,7 +158,7 @@ void Menu::printMosaic(std::vector<Player *> playerVector, int tempPlayerOneID)
             {
                 if (player->getMosaic()->getWallLine(j)[i] == true)
                 {
-                    output += *colourArray[j][i] + " ";
+                    output += colourArray[j][i] + " ";
                     output += master_wall[j][i];
                     output += TC_RESET;
                 } //test comment
@@ -201,11 +180,13 @@ void Menu::printMosaic(std::vector<Player *> playerVector, int tempPlayerOneID, 
     Player *playerTWO = playerVector[tempPlayerTwoID];
     std::string gap = "";
 
-    for (int i = 0; i < 36-(int)playerONE->getName().size(); i++)
+    std::cout << colourArray[0][0] << "I am random" << TC_RESET << std::endl;
+
+    for (int i = 0; i < 36 - (int)playerONE->getName().size(); i++)
     {
         gap += " ";
     }
-    
+
     count = 0;
     std::cout << "Mosaic for " << playerONE->getName()
               << gap
@@ -214,8 +195,8 @@ void Menu::printMosaic(std::vector<Player *> playerVector, int tempPlayerOneID, 
     for (int j = 0; j < NUMBER_OF_LINES; j++)
     {
         std::cout << j + 1 << ": ";
-        std::string outputOne;
-        std::string outputTwo;
+        std::string outputOne = "";
+        std::string outputTwo = "";
         int lineSize = playerONE->getMosaic()->getLine(j)->getMaxSize();
         int numTiles = playerONE->getMosaic()->getLine(j)->getNumTiles();
 
@@ -242,20 +223,20 @@ void Menu::printMosaic(std::vector<Player *> playerVector, int tempPlayerOneID, 
         }
 
         outputOne += " || ";
-        
+
         for (int i = 0; i < NUMBER_OF_LINES; i++)
         {
             if (playerONE->getMosaic()->getWallLine(j)[i] == true)
             {
                 outputOne += " ";
-                outputOne += *colourArray[j][i];
+                outputOne += colourArray[j][i];
                 outputOne += master_wall[j][i];
                 outputOne += TC_RESET;
                 count++;
             }
             else
             {
-                outputOne += *colourArray[j][i] + " ." + TC_RESET;
+                outputOne += colourArray[j][i] + " ." + TC_RESET;
                 count++;
             }
         }
@@ -287,14 +268,14 @@ void Menu::printMosaic(std::vector<Player *> playerVector, int tempPlayerOneID, 
             if (playerTWO->getMosaic()->getWallLine(j)[i] == true)
             {
                 outputTwo += " ";
-                outputTwo += *colourArray[j][i];
+                outputTwo += colourArray[j][i];
                 outputTwo += master_wall[j][i];
                 outputTwo += TC_RESET;
                 count++;
             }
             else
             {
-                outputTwo += *colourArray[j][i] + " ." + TC_RESET;
+                outputTwo += colourArray[j][i] + " ." + TC_RESET;
                 count++;
             }
         }
@@ -310,21 +291,26 @@ void Menu::printScore(string name, int score)
     std::cout << name << " score: " << score << std::endl;
 }
 
-void Menu::gameOver(Player *player)
+void Menu::gameOver(std::vector<Player *> winningPlayers)
 {
-    std::cout << "=== Game Over ===" << std::endl;
-    std::cout << "Player " << player->getName() << " wins!" << std::endl;
-    printScore(player->getName(), player->getScore());
-}
+    std::cout << "========== Game Over ==========" << std::endl;
+    if ((int)winningPlayers.size() > 1)
+    {
+        std::cout << "It's a Draw!!" << std::endl;
+    }
 
-void Menu::gameOver(string name1, string name2, int score)
+    std::cout << "Congratulations to:" << std::endl;
+
+    for (int i = 0; i < (int)winningPlayers.size(); i++)
+    {
+        std::cout << "Player "
+                  << winningPlayers[i]->getName() << " "
+                  << "Score: "
+                  << winningPlayers[i]->getScore() << std::endl;
+    }
+};
+
+TileType Menu::getMasterWall(int i, int j)
 {
-    std::cout << "=== Game Over ===" << std::endl;
-    std::cout << "Draw!" << std::endl;
-    std::cout << "Player " << name1 << " score: " << score << std::endl;
-    std::cout << "Player " << name2 << " score: " << score << std::endl;
-}
-
-TileType Menu::getMasterWall(int i, int j){
     return master_wall[i][j];
 }
